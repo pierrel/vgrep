@@ -21,14 +21,17 @@ class DB:
         print(f'Adding {p}')
         with open(p) as f:
             split_text = self.text_splitter.split_text(f.read())
-            ids = [self.to_id(x, p, idx) for idx, x in enumerate(split_text)]
-            meta = {'filename': p.as_posix(),
-                    # TODO: Add line  number somehow
-                    'last_modified': p.stat().st_mtime}
-            metadatas = list(repeat(meta,len(split_text)))
-            self.collection.add(documents=split_text,
-                                ids=ids,
-                                metadatas=metadatas)
+            if len(split_text) > 0:
+                ids = [self.to_id(x, p, idx) for idx, x in enumerate(split_text)]
+                meta = {'filename': p.as_posix(),
+                        # TODO: Add line  number somehow
+                        'last_modified': p.stat().st_mtime}
+                metadatas = list(repeat(meta,len(split_text)))
+                self.collection.add(documents=split_text,
+                                    ids=ids,
+                                    metadatas=metadatas)
+            else:
+                print(f'Skipping {p}')
 
     def remove(self, p:Path):
         print(f'Removing {p}')
