@@ -1,7 +1,7 @@
-from db import DB
-from fs import FS
+from vgrep.db import DB
+from vgrep.fs import FS
 from chromadb import chromadb
-from file_sync import FileSync
+from vgrep.file_sync import FileSync
 from pathlib import Path
 import pdb
 
