@@ -2,7 +2,7 @@ import chromadb
 from typing import List, Dict, Iterable
 from hashlib import md5
 from pathlib import Path
-from itertools import repeat
+from itertools import repeat, accumulate
 from functools import reduce
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pdb
@@ -23,10 +23,11 @@ class DB:
             split_text = self.text_splitter.split_text(f.read())
             if len(split_text) > 0:
                 ids = [self.to_id(x, p, idx) for idx, x in enumerate(split_text)]
-                meta = {'filename': p.as_posix(),
-                        # TODO: Add line  number somehow
-                        'last_modified': p.stat().st_mtime}
-                metadatas = list(repeat(meta,len(split_text)))
+                lines = self.to_lines(split_text)
+                meta_base = {'filename': p.as_posix(),
+                             'last_modified': p.stat().st_mtime}
+                metadatas = list(map(lambda x: {**meta_base, 'line_start': x},
+                                     lines))
                 self.collection.add(documents=split_text,
                                     ids=ids,
                                     metadatas=metadatas)
@@ -63,6 +64,12 @@ class DB:
                       self.__iterate_files__(),
                       {})
 
+    @classmethod
+    def to_lines(cls, text: List[str]) -> List[int]:
+        '''Returns the line number of the first line in the text elements'''
+        return [0] + list(accumulate(map(lambda x: x.count("\n"),
+                                         text)))[:-1]
+    
     @classmethod
     def __metadata_reducer__(
             cls,
