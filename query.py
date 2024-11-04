@@ -23,4 +23,6 @@ except chromadb.errors.InvalidCollectionException:
     collection = client.create_collection(name="main")
 db = DB(collection)
 
-print(db.query(args.search))
+for res in db.query(args.search):
+    print(f'{res["filename"]}:{res["line_start"]}')
+    print(f'{res["text"]}\n\n')

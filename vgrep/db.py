@@ -42,15 +42,16 @@ class DB:
         self.remove(p)
         self.add(p)
 
-    def query(self, s: str) -> List[Dict]:
+    def query(self, s: str, records: int = 10) -> List[Dict]:
         res = self.collection.query(query_texts=[s],
-                                    n_results=100)
+                                    n_results=records)
         docs = res['documents'][0]
-        filenames = map(lambda x: x['filename'],
-                        res['metadatas'][0])
+        metas = map(lambda x: {'filename': Path(x['filename']),
+                               'line_start': x['line_start']},
+                    res['metadatas'][0])
         return list(map(lambda x: {'text': x[0],
-                                   'filename': Path(x[1])},
-                        zip(docs, filenames)))
+                                   **(x[1])},
+                        zip(docs, metas)))
 
     def last_modified(self, p: Path):
         filename = p.as_posix()
