@@ -1,9 +1,11 @@
 import argparse
 from vgrep.db import DB
-from vgrep.fs import FS
+from settings import parse_settings
 from vgrep.file_sync import FileSync
 from chromadb import chromadb
 from pathlib import Path
+
+settings = parse_settings('./settings.json')
 
 # get the search string
 parser = argparse.ArgumentParser()
@@ -11,11 +13,10 @@ parser.add_argument("search",
                     help="The search string to use for the query")
 args = parser.parse_args()
 
-# point to FS
-fs = FS([Path('/home/pierre/Documents')])
-
 # set up DB
-client = chromadb.PersistentClient(path="./db")
+settings = chromadb.Settings(anonymized_telemetry=False)
+client = chromadb.PersistentClient(path=settings['db_dir'],
+                                   settings=settings)
 collection = None
 try:
     collection =  client.get_collection(name="main")
