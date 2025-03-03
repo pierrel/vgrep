@@ -1,9 +1,19 @@
-from vgrep.db import DB
+from vgrep.db import DB, QueryResult
 from settings import parse_settings
 from vgrep.file_sync import FileSync
 from chromadb import chromadb
 from pathlib import Path
 from typing import List
+
+
+def org_format_result(result: QueryResult) -> str:
+    name_link = f"[[{result['filename']}][{result['filename']}]]:{result['line_start']}"
+    body = f"#+begin_quote\n{result['text']}\n#+end_quote"
+    
+    return f"{name_link}\n{body}"
+    
+def org_format_results(results: List[QueryResult]) -> str:
+    return "\n\n".join(map(org_format_result, results))
 
 settings = parse_settings('./settings.json')
 
@@ -25,7 +35,5 @@ if __name__ == "__main__":
     parser.add_argument("search",
                         help="The search string to use for the query")
     args = parser.parse_args()
-    
-    for res in db.query(args.search):
-        print(f'{res["filename"]}:{res["line_start"]}')
-        print(f'{res["text"]}\n\n')
+
+    print(org_format_results(db.query(args.search)))
