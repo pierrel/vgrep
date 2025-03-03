@@ -1,11 +1,18 @@
 import chromadb
 from typing import List, Dict, Iterable
+from pydantic import BaseModel
 from hashlib import md5
 from pathlib import Path
 from itertools import repeat, accumulate
 from functools import reduce
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pdb
+
+class QueryResult(BaseModel):
+    text: str
+    filename: Path
+    line_start: int
+    
 
 class DB:
     '''Handle interactions like updates and queries to the vector DB'''
@@ -42,7 +49,7 @@ class DB:
         self.remove(p)
         self.add(p)
 
-    def query(self, s: str, records: int = 10) -> List[Dict]:
+    def query(self, s: str, records: int = 10) -> List[QueryResult]:
         res = self.collection.query(query_texts=[s],
                                     n_results=records)
         docs = res['documents'][0]
