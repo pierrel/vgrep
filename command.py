@@ -1,6 +1,7 @@
 from vgrep.db import DB, QueryResult
 from settings import parse_settings
 from vgrep.file_sync import FileSync
+from vgrep.fs import FS
 from chromadb import chromadb
 from pathlib import Path
 from typing import List
@@ -28,12 +29,28 @@ except chromadb.errors.InvalidCollectionException:
     collection = client.create_collection(name="main")
 db = DB(collection)
 
+paths = map(Path,
+            settings['sync_dirs'].keys())
+fs = FS(paths)
+fsync = FileSync(fs, db)
+
 if __name__ == "__main__":
     import argparse
+    import sys
     # get the search string
     parser = argparse.ArgumentParser()
-    parser.add_argument("search",
-                        help="The search string to use for the query")
+    parser.add_argument('-q', '--query', type=str,
+                        help='The search string to use for the query')
+    parser.add_argument('-s', '--sync', action='store_true',
+                        help='Switch to sync the vector db with the file system')
     args = parser.parse_args()
 
-    print(org_format_results(db.query(args.search)))
+    if args.sync:
+        fsync.sync()
+
+    if args.query:
+        print(org_format_results(db.query(args.search)))
+
+    if not args.query and not args.sync:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
