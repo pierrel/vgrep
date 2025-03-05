@@ -46,10 +46,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.sync:
+        print("Syncing...")
         fsync.sync()
+        print("Done.")
 
     if args.query:
-        print(org_format_results(db.query(args.search)))
+        print(f"Results for '{args.query}'")
+        print(org_format_results(db.query(args.query)))
 
     if not args.query and not args.sync:
         parser.print_help(sys.stderr)
