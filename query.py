@@ -7,7 +7,7 @@ from typing import List
 
 
 def org_format_result(result: QueryResult) -> str:
-    name_link = f"[[{result['filename']}][{result['filename']}]]:{result['line_start']}"
+    name_link = f"[[{result['filename']}::{result['line_start']}][{result['filename']}]]"
     body = f"#+begin_quote\n{result['text']}\n#+end_quote"
     
     return f"{name_link}\n{body}"
