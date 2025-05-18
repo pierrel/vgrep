@@ -1,12 +1,10 @@
 import chromadb
+from vgrep.file_interpreter import FileInterpreter
 from typing import List, Dict, Iterable
 from pydantic import BaseModel
-from hashlib import md5
 from pathlib import Path
-from itertools import repeat, accumulate
 from functools import reduce
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-import pdb
+
 
 class QueryResult(BaseModel):
     text: str
@@ -18,28 +16,18 @@ class DB:
     '''Handle interactions like updates and queries to the vector DB'''
     def __init__(self, collection: chromadb.Collection):
         self.collection = collection
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=400,
-            chunk_overlap=100,
-            length_function=len,
-            add_start_index=True)
+        self.file_interpreter = FileInterpreter()
     
-    def add(self, p:Path):
+    def add(self, p: Path):
         print(f'Adding {p}')
-        with open(p) as f:
-            split_text = self.text_splitter.split_text(f.read())
-            if len(split_text) > 0:
-                ids = [self.to_id(x, p, idx) for idx, x in enumerate(split_text)]
-                lines = self.to_lines(split_text)
-                meta_base = {'filename': p.as_posix(),
-                             'last_modified': p.stat().st_mtime}
-                metadatas = list(map(lambda x: {**meta_base, 'line_start': x},
-                                     lines))
-                self.collection.add(documents=split_text,
-                                    ids=ids,
-                                    metadatas=metadatas)
-            else:
-                print(f'Skipping {p}')
+        meta_base = {'filename': p.as_posix(),
+                     'last_modified': p.stat().st_mtime}
+        for chunk in self.file_interpreter.file_chunks(p):
+            metadata = {**meta_base,
+                        'line_start': chunk.metadata.line_start}
+            self.collection.add(documents=chunk.chunk,
+                                ids=chunk.metadata.id,
+                                metadatas=metadata)
 
     def remove(self, p:Path):
         print(f'Removing {p}')
@@ -73,12 +61,6 @@ class DB:
                       {})
 
     @classmethod
-    def to_lines(cls, text: List[str]) -> List[int]:
-        '''Returns the line number of the first line in the text elements'''
-        return [0] + list(accumulate(map(lambda x: x.count("\n"),
-                                         text)))[:-1]
-    
-    @classmethod
     def __metadata_reducer__(
             cls,
             acc: Dict[Path, float],
@@ -101,9 +83,5 @@ class DB:
                 yield (meta["filename"],
                        meta["last_modified"])
     
-    @classmethod
-    def to_id(cls, s: str, path: Path, idx: int) -> str:
-        together = s + path.as_posix()
-        return f'{md5(together.encode()).hexdigest()}:{idx}'
 
 
