@@ -2,9 +2,7 @@ import unittest
 import pdb
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
-
 from vgrep.fs import FS
-
 
 class TestFS(unittest.TestCase):
     def test_files_modifications(self):

@@ -2,7 +2,7 @@ from vgrep.db import DB
 from vgrep.fs import FS
 from pathlib import Path
 from typing import Dict, Set
-import pdb
+
 
 class FileSync:
     """Maintains the filesystem and db in sync"""
@@ -46,7 +46,3 @@ class FileSync:
                fs_files: Set[Path]):
         for path in db_files - fs_files:
             db.remove(path)
-        
-    
-
-                
