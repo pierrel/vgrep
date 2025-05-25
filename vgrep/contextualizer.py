@@ -12,7 +12,8 @@ def contextualize(input_gen: Generator[str],
     graph = contextualize_graph(contextualizing_llm)
     res = graph.invoke({"context": "",
                         "to_contextualize": input_gen,
-                        "done_contextualizing": False})
+                        "done_contextualizing": False},
+                       {"recursion_limit": 100})
     return res['context']
 
 

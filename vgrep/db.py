@@ -28,7 +28,6 @@ class DB:
         text_chunks = map(lambda chunk: chunk.chunk,
                           chunks)
         context = contextualize(text_chunks, self.contextualizing_llm)
-        print(f'Contextualized in {len(context)} characters as {context}')
         meta_base = {'filename': p.as_posix(),
                      'last_modified': p.stat().st_mtime,
                      'context': context}
