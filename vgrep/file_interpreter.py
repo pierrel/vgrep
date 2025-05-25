@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from typing import Generator
 from pathlib import Path
 from hashlib import md5
-import pdb
 
 
 class TextChunkMetadata(BaseModel):
@@ -24,8 +23,8 @@ class FileInterpreter:
 
     def __init__(self):
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=400,
-            chunk_overlap=100,
+            chunk_size=3000,
+            chunk_overlap=500,
             length_function=len,
             add_start_index=True)
 
