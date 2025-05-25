@@ -1,6 +1,6 @@
 import chromadb
 from vgrep.file_interpreter import FileInterpreter
-from vgrep.summarizer import summarize
+from vgrep.contextualizer import contextualize
 from langchain_ollama import ChatOllama
 from typing import List, Dict, Iterable
 from pydantic import BaseModel
@@ -17,8 +17,8 @@ class QueryResult(BaseModel):
 class DB:
     '''Handle interactions like updates and queries to the vector DB'''
     def __init__(self, collection: chromadb.Collection):
-        self.summarizing_llm = ChatOllama(model="llama3.2",
-                                          temperature=0)
+        self.contextualizing_llm = ChatOllama(model="llama3.2",
+                                              temperature=0)
         self.collection = collection
         self.file_interpreter = FileInterpreter()
     
@@ -27,11 +27,11 @@ class DB:
         chunks = self.file_interpreter.file_chunks(p)
         text_chunks = map(lambda chunk: chunk.chunk,
                           chunks)
-        summary = summarize(text_chunks, self.summarizing_llm)
-        print(f'Summarized in {len(summary)} characters as {summary}')
+        context = contextualize(text_chunks, self.contextualizing_llm)
+        print(f'Contextualized in {len(context)} characters as {context}')
         meta_base = {'filename': p.as_posix(),
                      'last_modified': p.stat().st_mtime,
-                     'summary': summary}
+                     'context': context}
         for chunk in chunks:
             metadata = {**meta_base,
                         'line_start': chunk.metadata.line_start}
