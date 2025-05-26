@@ -12,7 +12,8 @@ class QueryResult(BaseModel):
     text: str
     filename: Path
     line_start: int
-    
+    context: str
+
 
 class DB:
     '''Handle interactions like updates and queries to the vector DB'''
@@ -57,7 +58,8 @@ class DB:
                                     n_results=records)
         docs = res['documents'][0]
         metas = map(lambda x: {'filename': Path(x['filename']),
-                               'line_start': x['line_start']},
+                               'line_start': x['line_start'],
+                               'context': x['context']},
                     res['metadatas'][0])
         return list(map(lambda x: {'text': x[0],
                                    **(x[1])},
