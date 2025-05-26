@@ -2,16 +2,15 @@ from vgrep.templater import Templater
 from langchain_core.runnables import Runnable
 from typing import Generator
 
+class Contextualizer:
+    def __init__(self, llm: Runnable):
+        self.templater = Templater("contextualize.txt.j2")
+        self.llm = llm
 
-def contextualize(input_gen: Generator[str],
-                  contextualizing_llm: Runnable) -> str:
-    templater = Templater("contextualize.txt.j2")
-    context = ""
-
-    for chunk in input_gen:
-        request = templater.render_template(context=context,
-                                            chunk=chunk)
-        res = contextualizing_llm.invoke(request)
-        context = res.content
-        
-    return context
+    def contextualize(self,
+                      text: str,
+                      existing_context: str = ""):
+        request = self.templater.render_template(context=existing_context,
+                                                 chunk=text)
+        res = self.llm.invoke(request)
+        return res.content

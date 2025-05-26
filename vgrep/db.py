@@ -1,6 +1,6 @@
 import chromadb
 from vgrep.file_interpreter import FileInterpreter
-from vgrep.contextualizer import contextualize
+from vgrep.contextualizer import Contextualizer
 from langchain_ollama import ChatOllama
 from typing import List, Dict, Iterable
 from pydantic import BaseModel
@@ -17,25 +17,32 @@ class QueryResult(BaseModel):
 class DB:
     '''Handle interactions like updates and queries to the vector DB'''
     def __init__(self, collection: chromadb.Collection):
-        self.contextualizing_llm = ChatOllama(model="llama3.2",
-                                              temperature=0)
+        llm = ChatOllama(model="llama3.2",
+                         temperature=0)
+        self.contextualizer = Contextualizer(llm)
         self.collection = collection
         self.file_interpreter = FileInterpreter()
     
     def add(self, p: Path):
         print(f'Adding {p}')
-        chunks = list(self.file_interpreter.file_chunks(p))
-        context = contextualize((x.chunk for x in chunks),
-                                self.contextualizing_llm)
+        chunks = self.file_interpreter.file_chunks(p)
         meta_base = {'filename': p.as_posix(),
-                     'last_modified': p.stat().st_mtime,
-                     'context': context}
+                     'last_modified': p.stat().st_mtime}
+        context = ""
+        ids_to_update = []
         for chunk in chunks:
+            ids_to_update += [chunk.metadata.id]
+            context = self.contextualizer.contextualize(chunk.chunk,
+                                                        context)
             metadata = {**meta_base,
                         'line_start': chunk.metadata.line_start}
             self.collection.add(documents=chunk.chunk,
                                 ids=chunk.metadata.id,
                                 metadatas=metadata)
+
+        for id in ids_to_update:
+            self.collection.update(id,
+                                   metadatas={'context': context})
 
     def remove(self, p:Path):
         print(f'Removing {p}')
