@@ -1,19 +1,16 @@
-import unittest
-import pdb
+from unittest import TestCase
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
 from vgrep.fs import FS
 
-class TestFS(unittest.TestCase):
+class TestFS(TestCase):
     def test_files_modifications(self):
         td = TemporaryDirectory()
         top_org_file = NamedTemporaryFile(dir=td.name,
                                           suffix=".org")
-        top_non_org_file = NamedTemporaryFile(dir=td.name)
         bd = TemporaryDirectory(dir=td.name)
         bottom_org_file = NamedTemporaryFile(dir=bd.name,
                                              suffix=".org")
-        bottom_non_org_file = NamedTemporaryFile(dir=bd.name)
 
         fs = FS([Path(td.name)])
 
@@ -30,11 +27,9 @@ class TestFS(unittest.TestCase):
         td = TemporaryDirectory()
         top_org_file = NamedTemporaryFile(dir=td.name,
                                           suffix=".org")
-        top_non_org_file = NamedTemporaryFile(dir=td.name)
         bd = TemporaryDirectory(dir=td.name)
         bottom_org_file = NamedTemporaryFile(dir=bd.name,
                                              suffix=".org")
-        bottom_non_org_file = NamedTemporaryFile(dir=bd.name)
 
         res = set(map(Path,
                       map(lambda x: x.name,
