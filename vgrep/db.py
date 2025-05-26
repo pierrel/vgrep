@@ -24,10 +24,9 @@ class DB:
     
     def add(self, p: Path):
         print(f'Adding {p}')
-        chunks = self.file_interpreter.file_chunks(p)
-        text_chunks = map(lambda chunk: chunk.chunk,
-                          chunks)
-        context = contextualize(text_chunks, self.contextualizing_llm)
+        chunks = list(self.file_interpreter.file_chunks(p))
+        context = contextualize((x.chunk for x in chunks),
+                                self.contextualizing_llm)
         meta_base = {'filename': p.as_posix(),
                      'last_modified': p.stat().st_mtime,
                      'context': context}
