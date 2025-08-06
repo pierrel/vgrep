@@ -39,7 +39,7 @@ def main() -> None:
     )
     try:
         collection = client.get_collection(name="main")
-    except chromadb.errors.InvalidCollectionException:
+    except chromadb.errors.NotFoundError:
         collection = client.create_collection(name="main")
     db = DB(collection)
 
