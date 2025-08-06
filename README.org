@@ -14,11 +14,10 @@ pip install dist/vgrep-*.whl
 #+end_src
 
 * Publishing
-Create a source distribution and wheel then upload with [[https://twine.readthedocs.io/][twine]]:
-#+begin_src shell
-python -m build
-twine upload dist/*
-#+end_src
+Releases are published to [[https://pypi.org/][PyPI]] automatically via GitHub Actions when a
+GitHub release is created. Configure the repository with a
+``PYPI_API_TOKEN`` secret and the workflow will build and upload the
+distribution for you.
 
 * Usage
 ** Command line
