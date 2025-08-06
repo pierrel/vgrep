@@ -13,13 +13,34 @@ class TestDB(TestCase):
         chroma_settings = chromadb.Settings(anonymized_telemetry=False)
         client = chromadb.PersistentClient(path=cls.db_dir.name,
                                            settings=chroma_settings)
-        collection = None
-        try:
-            collection = client.get_collection(name="main")
-        except chromadb.errors.InvalidCollectionException:
-            collection = client.create_collection(name="main")
+
+        class DummyEmbeddingFunction:
+            def __call__(self, input):
+                return [[0.0] for _ in input]
+
+            @staticmethod
+            def name() -> str:
+                return "default"
+
+            def get_config(self):
+                return {}
+
+        collection = client.get_or_create_collection(
+            name="main",
+            embedding_function=DummyEmbeddingFunction(),
+        )
         cls.collection = collection
         cls.db = DB(collection)
+        # Stub out the LLM to avoid network calls during tests
+        class DummyLLM:
+            def invoke(self, *args, **kwargs):
+                class FakeResp:
+                    def __init__(self, content):
+                        self.content = content
+
+                return FakeResp("ctx")
+
+        cls.db.contextualizer.llm = DummyLLM()
 
     def clear_db(self):
         self.collection.delete()
