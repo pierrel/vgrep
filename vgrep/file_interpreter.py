@@ -21,10 +21,10 @@ class FileInterpreter:
 
     """
 
-    def __init__(self):
+    def __init__(self, size: int = 3000, overlap: int = 500):
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=3000,
-            chunk_overlap=500,
+            chunk_size=size,
+            chunk_overlap=overlap,
             length_function=len,
             add_start_index=True)
 
