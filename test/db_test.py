@@ -3,7 +3,6 @@ from chromadb import chromadb
 from unittest import TestCase
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-import pdb
 
 class TestDB(TestCase):
     @classmethod
@@ -31,16 +30,6 @@ class TestDB(TestCase):
         )
         cls.collection = collection
         cls.db = DB(collection)
-        # Stub out the LLM to avoid network calls during tests
-        class DummyLLM:
-            def invoke(self, *args, **kwargs):
-                class FakeResp:
-                    def __init__(self, content):
-                        self.content = content
-
-                return FakeResp("ctx")
-
-        cls.db.contextualizer.llm = DummyLLM()
 
     def clear_db(self):
         self.collection.delete()
