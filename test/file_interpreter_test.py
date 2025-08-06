@@ -2,7 +2,7 @@ from unittest import TestCase
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from vgrep.file_interpreter import FileInterpreter
 

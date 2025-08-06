@@ -1,11 +1,16 @@
 import chromadb
-from vgrep.file_interpreter import FileInterpreter
-from vgrep.contextualizer import Contextualizer
-from langchain_ollama import ChatOllama
-from typing import List, Dict, Iterable
-from pydantic import BaseModel
-from pathlib import Path
 from functools import reduce
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, TYPE_CHECKING
+
+from pydantic import BaseModel
+
+from vgrep.file_interpreter import FileInterpreter
+
+if TYPE_CHECKING:  # pragma: no cover - only for type hints
+    from vgrep.contextualizer import Contextualizer
+else:  # pragma: no cover - avoid hard dependency at runtime
+    Contextualizer = Any
 
 
 class QueryResult(BaseModel):
@@ -16,34 +21,44 @@ class QueryResult(BaseModel):
 
 
 class DB:
-    '''Handle interactions like updates and queries to the vector DB'''
-    def __init__(self, collection: chromadb.Collection):
-        llm = ChatOllama(model="llama3.2",
-                         temperature=0)
-        self.contextualizer = Contextualizer(llm)
+    """Handle interactions like updates and queries to the vector DB"""
+
+    def __init__(
+        self,
+        collection: chromadb.Collection,
+        contextualizer: Optional[Contextualizer] = None,
+    ) -> None:
+        self.contextualizer = contextualizer
         self.collection = collection
         self.file_interpreter = FileInterpreter()
     
     def add(self, p: Path):
         print(f'Adding {p}')
         chunks = self.file_interpreter.file_chunks(p)
-        meta_base = {'filename': p.as_posix(),
-                     'last_modified': p.stat().st_mtime}
+        meta_base = {
+            "filename": p.as_posix(),
+            "last_modified": p.stat().st_mtime,
+            "context": "",
+        }
         context = ""
         ids_to_update = []
         for chunk in chunks:
-            ids_to_update += [chunk.metadata.id]
-            context = self.contextualizer.contextualize(chunk.chunk,
-                                                        context)
-            metadata = {**meta_base,
-                        'line_start': chunk.metadata.line_start}
-            self.collection.add(documents=chunk.chunk,
-                                ids=chunk.metadata.id,
-                                metadatas=metadata)
+            ids_to_update.append(chunk.metadata.id)
+            if self.contextualizer:
+                context = self.contextualizer.contextualize(chunk.chunk, context)
+            metadata = {
+                **meta_base,
+                "line_start": chunk.metadata.line_start,
+            }
+            self.collection.add(
+                documents=chunk.chunk,
+                ids=chunk.metadata.id,
+                metadatas=metadata,
+            )
 
-        for id in ids_to_update:
-            self.collection.update(id,
-                                   metadatas={'context': context})
+        if self.contextualizer:
+            for id in ids_to_update:
+                self.collection.update(id, metadatas={"context": context})
 
     def remove(self, p:Path):
         print(f'Removing {p}')
