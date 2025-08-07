@@ -23,16 +23,37 @@ distribution for you.
 ** Command line
 Sync the database with tracked folders or search for text:
 #+begin_src shell
-vgrep --sync
-vgrep --query "search text"
+vgrep /path/to/dir --sync --match '*.org'
+vgrep /path/to/dir --query "search text" --match "*.org"
 #+end_src
 
 ** Library
-Interact with the index programmatically:
+Interact with the index programmatically using the ``Manager``:
 #+begin_src python
-from vgrep.db import DB
+from pathlib import Path
+from vgrep.manager import Manager
 
-# assuming ``collection`` is a ``chromadb.Collection``
-db = DB(collection)
-results = db.query("needle")
+mgr = Manager(Path("/my/notes"), file_match=lambda p: p.suffix == ".org")
+mgr.sync()
+results = mgr.query("needle")
 #+end_src
+
+* Development
+Install the dependencies
+
+#+begin_src shell
+pip install -r requirements.txt
+#+end_src
+
+Run the tests with:
+
+#+begin_src shell
+pytest
+#+end_src
+
+Install the package in editable mode so Emacs/Elpy can discover the modules:
+
+#+begin_src shell
+pip install -e .
+#+end_src
+
