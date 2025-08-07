@@ -1,2 +1,38 @@
 #+title: Vector-Grep
 Sync your DB to a vector DB and perform queries.
+
+* Installation
+Install the published package with [[https://pip.pypa.io/en/stable/][pip]]:
+#+begin_src shell
+pip install vgrep
+#+end_src
+
+To build and install locally:
+#+begin_src shell
+python -m build
+pip install dist/vgrep-*.whl
+#+end_src
+
+* Publishing
+Releases are published to [[https://pypi.org/][PyPI]] automatically via GitHub Actions when a
+GitHub release is created. Configure the repository with a
+``PYPI_API_TOKEN`` secret and the workflow will build and upload the
+distribution for you.
+
+* Usage
+** Command line
+Sync the database with tracked folders or search for text:
+#+begin_src shell
+vgrep --sync
+vgrep --query "search text"
+#+end_src
+
+** Library
+Interact with the index programmatically:
+#+begin_src python
+from vgrep.db import DB
+
+# assuming ``collection`` is a ``chromadb.Collection``
+db = DB(collection)
+results = db.query("needle")
+#+end_src

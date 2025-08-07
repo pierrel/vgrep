@@ -1,10 +1,21 @@
-from vgrep.db import DB, QueryResult
-from settings import parse_settings
-from vgrep.file_sync import FileSync
-from vgrep.fs import FS
-from chromadb import chromadb
+"""Command line interface for vgrep.
+
+This module exposes a ``main`` function so it can be used as an entry point
+when the project is installed as a package.  The previous implementation kept
+most of the logic at module import time, which made reuse difficult.  The
+logic has been wrapped in ``main`` so tools like ``setuptools`` can create a
+``console_script`` entry point.
+"""
+
 from pathlib import Path
 from typing import List
+
+from chromadb import chromadb
+
+from vgrep.db import DB, QueryResult
+from vgrep.file_sync import FileSync
+from vgrep.fs import FS
+from settings import parse_settings
 
 
 def org_format_result(result: QueryResult) -> str:
@@ -16,33 +27,42 @@ def org_format_result(result: QueryResult) -> str:
 def org_format_results(results: List[QueryResult]) -> str:
     return "\n\n".join(map(org_format_result, results))
 
-settings = parse_settings('./settings.json')
 
-# set up DB
-chroma_settings = chromadb.Settings(anonymized_telemetry=False)
-client = chromadb.PersistentClient(path=settings['db_dir'],
-                                   settings=chroma_settings)
-collection = None
-try:
-    collection = client.get_collection(name="main")
-except chromadb.errors.InvalidCollectionException:
-    collection = client.create_collection(name="main")
-db = DB(collection)
+def main() -> None:
+    """Entry point for the ``vgrep`` command line tool."""
+    settings = parse_settings("./settings.json")
 
-paths = map(Path,
-            settings['sync_dirs'].keys())
-fs = FS(paths)
-fsync = FileSync(fs, db)
+    # set up DB
+    chroma_settings = chromadb.Settings(anonymized_telemetry=False)
+    client = chromadb.PersistentClient(
+        path=settings["db_dir"], settings=chroma_settings
+    )
+    try:
+        collection = client.get_collection(name="main")
+    except chromadb.errors.NotFoundError:
+        collection = client.create_collection(name="main")
+    db = DB(collection)
 
-if __name__ == "__main__":
+    paths = map(Path, settings["sync_dirs"].keys())
+    fs = FS(paths)
+    fsync = FileSync(fs, db)
+
     import argparse
     import sys
-    # get the search string
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('-q', '--query', type=str,
-                        help='The search string to use for the query')
-    parser.add_argument('-s', '--sync', action='store_true',
-                        help='Switch to sync the vector db with the file system')
+    parser.add_argument(
+        "-q",
+        "--query",
+        type=str,
+        help="The search string to use for the query",
+    )
+    parser.add_argument(
+        "-s",
+        "--sync",
+        action="store_true",
+        help="Switch to sync the vector db with the file system",
+    )
     args = parser.parse_args()
 
     if args.sync:
@@ -57,3 +77,7 @@ if __name__ == "__main__":
     if not args.query and not args.sync:
         parser.print_help(sys.stderr)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
