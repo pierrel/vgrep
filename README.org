@@ -23,16 +23,17 @@ distribution for you.
 ** Command line
 Sync the database with tracked folders or search for text:
 #+begin_src shell
-vgrep --sync
-vgrep --query "search text"
+vgrep /path/to/dir --sync --match '*.org'
+vgrep /path/to/dir --query "search text"
 #+end_src
 
 ** Library
-Interact with the index programmatically:
+Interact with the index programmatically using the ``Manager``:
 #+begin_src python
-from vgrep.db import DB
+from pathlib import Path
+from vgrep.manager import Manager
 
-# assuming ``collection`` is a ``chromadb.Collection``
-db = DB(collection)
-results = db.query("needle")
+mgr = Manager(Path("/my/notes"), file_match=lambda p: p.suffix == ".org")
+mgr.sync()
+results = mgr.query("needle")
 #+end_src
