@@ -1,48 +1,35 @@
-import datetime
 from pathlib import Path
-from typing import List, Dict
-import re
-import pdb
+from typing import Callable, Dict, List
+
 
 class FS:
     """Handles filesystem operations"""
-    def __init__(self, files: List[Path]):
+
+    def __init__(self, files: List[Path], file_match: Callable[[Path], bool] | None = None):
         self.files = files
+        self.file_match = file_match or (lambda p: p.is_file())
 
     def all_files_modifications(self) -> Dict[Path, float]:
         """Returns a dict of Path -> modification time"""
-        return dict(map(lambda x: [x,
-                                   self.file_timestamp(x)],
-                        sum(map(self.all_files_recur,
-                                self.files),
-                            [])))
+        return {
+            p: self.file_timestamp(p)
+            for p in sum(map(self.all_files_recur, self.files), [])
+        }
 
-    @classmethod
-    def all_files_recur(cls, path: Path) -> List[Path]:
+    def all_files_recur(self, path: Path) -> List[Path]:
         """Returns all files in `path`"""
         if path.is_file():
-            if cls.valid_file(path):
-                return [path]
-            else:
-                return []
+            return [path] if self.file_match(path) else []
         elif path.is_dir():
-            return sum(map(cls.all_files_recur, path.iterdir()),
-                       [])
+            return sum(map(self.all_files_recur, path.iterdir()), [])
         else:
             return []
 
-    @classmethod
-    def valid_file(cls, path: Path) -> bool:
-        '''for now just org files'''
-        return re.match('.+\\.org$',
-                        path.as_posix()) != None
-        
-        
-    @classmethod
-    def file_timestamp(cls, path: Path) -> float:
+    @staticmethod
+    def file_timestamp(path: Path) -> float:
         return path.stat().st_mtime
 
-    @classmethod
-    def to_path(cls, filepath: str) -> Path:
-        Path(filepath)
+    @staticmethod
+    def to_path(filepath: str) -> Path:
+        return Path(filepath)
 

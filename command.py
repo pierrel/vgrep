@@ -7,15 +7,14 @@ logic has been wrapped in ``main`` so tools like ``setuptools`` can create a
 ``console_script`` entry point.
 """
 
+import argparse
+import fnmatch
+import sys
 from pathlib import Path
 from typing import List
 
-from chromadb import chromadb
-
-from vgrep.db import DB, QueryResult
-from vgrep.file_sync import FileSync
-from vgrep.fs import FS
-from settings import parse_settings
+from vgrep.db import QueryResult
+from vgrep.manager import Manager
 
 
 def org_format_result(result: QueryResult) -> str:
@@ -30,32 +29,10 @@ def org_format_results(results: List[QueryResult]) -> str:
 
 def main() -> None:
     """Entry point for the ``vgrep`` command line tool."""
-    settings = parse_settings("./settings.json")
-
-    # set up DB
-    chroma_settings = chromadb.Settings(anonymized_telemetry=False)
-    client = chromadb.PersistentClient(
-        path=settings["db_dir"], settings=chroma_settings
-    )
-    try:
-        collection = client.get_collection(name="main")
-    except chromadb.errors.NotFoundError:
-        collection = client.create_collection(name="main")
-    db = DB(collection)
-
-    paths = map(Path, settings["sync_dirs"].keys())
-    fs = FS(paths)
-    fsync = FileSync(fs, db)
-
-    import argparse
-    import sys
-
     parser = argparse.ArgumentParser()
+    parser.add_argument("path", type=Path, help="Directory to index")
     parser.add_argument(
-        "-q",
-        "--query",
-        type=str,
-        help="The search string to use for the query",
+        "-q", "--query", type=str, help="The search string to use for the query"
     )
     parser.add_argument(
         "-s",
@@ -63,16 +40,29 @@ def main() -> None:
         action="store_true",
         help="Switch to sync the vector db with the file system",
     )
+    parser.add_argument(
+        "--match", type=str, help="Glob used to match files for syncing"
+    )
     args = parser.parse_args()
 
+    match_fn = None
+    if args.match:
+        pattern = args.match
+
+        def match_fn(p: Path) -> bool:
+            return p.is_file() and fnmatch.fnmatch(p.name, pattern)
+
+    manager = Manager(args.path, file_match=match_fn)
+
     if args.sync:
-        print("Syncing...")
-        fsync.sync()
+        print(f'Syncing directory {manager.directory} to db {manager.db_path}')
+        manager.sync()
         print("Done.")
 
     if args.query:
+        print(f'Querying {manager.db_path} for files in directory {manager.directory}')
         print(f"Results for '{args.query}'")
-        print(org_format_results(db.query(args.query)))
+        print(org_format_results(manager.query(args.query)))
 
     if not args.query and not args.sync:
         parser.print_help(sys.stderr)

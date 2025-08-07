@@ -31,10 +31,8 @@ class TestFS(TestCase):
         bottom_org_file = NamedTemporaryFile(dir=bd.name,
                                              suffix=".org")
 
-        res = set(map(Path,
-                      map(lambda x: x.name,
-                          [bottom_org_file, top_org_file])))
+        res = {Path(top_org_file.name), Path(bottom_org_file.name)}
 
-        found_files = set(FS.all_files_recur(Path(td.name)))
-        self.assertSetEqual(found_files,
-                            res)
+        fs = FS([Path(td.name)])
+        found_files = set(fs.all_files_recur(Path(td.name)))
+        self.assertSetEqual(found_files, res)
