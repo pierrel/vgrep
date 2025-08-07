@@ -55,11 +55,12 @@ def main() -> None:
     manager = Manager(args.path, file_match=match_fn)
 
     if args.sync:
-        print("Syncing...")
+        print(f'Syncing directory {manager.directory} to db {manager.db_path}')
         manager.sync()
         print("Done.")
 
     if args.query:
+        print(f'Querying {manager.db_path} for files in directory {manager.directory}')
         print(f"Results for '{args.query}'")
         print(org_format_results(manager.query(args.query)))
 

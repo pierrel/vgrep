@@ -24,7 +24,7 @@ distribution for you.
 Sync the database with tracked folders or search for text:
 #+begin_src shell
 vgrep /path/to/dir --sync --match '*.org'
-vgrep /path/to/dir --query "search text"
+vgrep /path/to/dir --query "search text" --match "*.org"
 #+end_src
 
 ** Library

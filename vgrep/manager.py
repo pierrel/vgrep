@@ -26,7 +26,7 @@ class Manager:
         self.db_path = (
             Path(db_path)
             if db_path
-            else self._default_db_path(self.directory, base_match)
+            else self._default_db_path(self.directory)
         )
         self.db_path.mkdir(parents=True, exist_ok=True)
 
@@ -38,21 +38,23 @@ class Manager:
         self.file_match = combined_match
 
         chroma_settings = chromadb.Settings(anonymized_telemetry=False)
-        client = chromadb.PersistentClient(path=str(self.db_path), settings=chroma_settings)
-        collection = client.get_or_create_collection(name="main", embedding_function=embedding)
+        client = chromadb.PersistentClient(path=str(self.db_path),
+                                           settings=chroma_settings)
+        collection = (
+            client.get_or_create_collection(name="main",
+                                            embedding_function=embedding)
+            if embedding
+            else client.get_or_create_collection(name="main")
+        )
 
         self.db = DB(collection)
         self.fs = FS([self.directory], self.file_match)
         self._syncer = FileSync(self.fs, self.db)
 
-    def _default_db_path(self, directory: Path, match_fn: Callable[[Path], bool]) -> Path:
+    def _default_db_path(self,
+                         directory: Path) -> Path:
         h = hashlib.sha256()
         h.update(directory.as_posix().encode())
-        try:
-            source = inspect.getsource(match_fn).encode()
-        except (OSError, TypeError):
-            source = repr(match_fn).encode()
-        h.update(source)
         return Path(tempfile.gettempdir()) / f"vgrep-{h.hexdigest()}"
 
     def sync(self) -> None:
