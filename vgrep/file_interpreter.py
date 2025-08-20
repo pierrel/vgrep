@@ -31,7 +31,11 @@ class FileInterpreter:
     def file_chunks(self,
                     p: Path) -> Generator[TextChunkWithMetadata, None, None]:
         """Yield TextChunkWithMetadata objects for the given file."""
-        with open(p) as f:
+        # Some files (such as system info pages) may not be valid UTF-8 which
+        # would previously cause ``UnicodeDecodeError`` when reading.  Open the
+        # file with ``errors='ignore'`` so that undecodable bytes are skipped and
+        # indexing can continue.
+        with open(p, encoding="utf-8", errors="ignore") as f:
             text = f.read()
 
         # Use `create_documents` so that we get the start index of each chunk.
