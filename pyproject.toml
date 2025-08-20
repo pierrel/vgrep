@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vgrep"
-version = "0.1.1"
+version = "0.1.2"
 description = "Vector-based grep tool"
 readme = {file = "README.org", content-type = "text/plain"}
 requires-python = ">=3.8"

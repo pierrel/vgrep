@@ -34,14 +34,19 @@ class DB:
     
     def add(self, p: Path):
         print(f'Adding {p}')
-        chunks = self.file_interpreter.file_chunks(p)
-        meta_base = {
-            "filename": p.as_posix(),
-            "last_modified": p.stat().st_mtime,
-            "context": "",
-        }
-        context = ""
-        ids_to_update = []
+        chunks = []
+        try:
+            chunks = self.file_interpreter.file_chunks(p)
+            meta_base = {
+                "filename": p.as_posix(),
+                "last_modified": p.stat().st_mtime,
+                "context": "",
+            }
+            context = ""
+            ids_to_update = []
+        except UnicodeDecodeError:
+            print(f'Could not add {p}, skippin')
+
         for chunk in chunks:
             ids_to_update.append(chunk.metadata.id)
             if self.contextualizer:
