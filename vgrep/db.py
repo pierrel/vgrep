@@ -51,15 +51,15 @@ class DB:
             ids_to_update.append(chunk.metadata.id)
             if self.contextualizer:
                 context = self.contextualizer.contextualize(chunk.chunk, context)
-                metadata = {
-                    **meta_base,
-                    "line_start": chunk.metadata.line_start,
-                }
-                self.collection.add(
-                    documents=chunk.chunk,
-                    ids=chunk.metadata.id,
-                    metadatas=metadata,
-                )
+            metadata = {
+                **meta_base,
+                "line_start": chunk.metadata.line_start,
+            }
+            self.collection.add(
+                documents=chunk.chunk,
+                ids=chunk.metadata.id,
+                metadatas=metadata,
+            )
 
         if self.contextualizer:
             for id in ids_to_update:
