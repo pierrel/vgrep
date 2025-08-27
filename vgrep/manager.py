@@ -48,7 +48,12 @@ class Manager:
         )
 
         self.db = DB(collection)
-        self.fs = FS([self.directory], self.file_match)
+        self.fs = FS(
+            [self.directory],
+            self.file_match,
+            prune_ignored_dirs=file_match is None,
+            match_supplied=file_match is not None,
+        )
         self._syncer = FileSync(self.fs, self.db)
 
     def _default_db_path(self,
