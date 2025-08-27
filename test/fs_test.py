@@ -39,17 +39,29 @@ class TestFS(TestCase):
 
     def test_ignore_patterns(self):
         td = TemporaryDirectory()
-        env_path = Path(td.name) / ".env"
-        env_path.touch()
-        pycache = Path(td.name) / "__pycache__"
+        project_path = Path(td.name) / "some_project"
+        project_path.mkdir()
+        tilde_file = project_path / "something.txt~"
+        tilde_file.touch()
+        hash_file = project_path / "#something.txt#"
+        hash_file.touch()
+        env_path = project_path / ".venv"
+        env_path.mkdir()
+        env_file = env_path / "something.py"
+        env_file.touch()
+        pycache = project_path / "__pycache__"
         pycache.mkdir()
         ignored_file = pycache / "foo.pyc"
         ignored_file.touch()
 
         fs = FS([Path(td.name)])
         found_files = set(fs.all_files_recur(Path(td.name)))
-
+        print("found things")
+        print(found_files)
         self.assertNotIn(env_path, found_files)
+        self.assertNotIn(tilde_file, found_files)
+        self.assertNotIn(hash_file, found_files)
+        self.assertNotIn(env_file, found_files)
         self.assertNotIn(ignored_file, found_files)
 
     def test_ignore_override_by_match(self):

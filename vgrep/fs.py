@@ -4,7 +4,11 @@ from typing import Callable, Dict, List, Optional
 import pathspec
 
 
-DEFAULT_IGNORE_PATTERNS = [".env", "__pycache__/"]
+DEFAULT_IGNORE_PATTERNS = [".venv",
+                           ".env",
+                           "__pycache__",
+                           "**/*~",
+                           "**/#*#"]
 
 
 class FS:
